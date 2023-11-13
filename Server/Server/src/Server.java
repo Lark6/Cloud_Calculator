@@ -71,7 +71,6 @@ class ClientHandler implements Runnable //Thread to Socket Connection
             String clientMessage = reader.readLine();
             int Errcode=0; //0: No Err 1: Too many Arguments, 2: Need more argument, 3: Divided by Zero
             int result =0;
-            Arithmetic_Operations arithmetic_Operations = new Arithmetic_Operations();
             String[] Str = clientMessage.split(" ");
 
             System.out.println(Str.length);
@@ -122,15 +121,7 @@ class ClientHandler implements Runnable //Thread to Socket Connection
             sb.append(Integer.toString(Errcode));
             sb.append(" ");
             sb.append(Integer.toString(result));
-            
-            
 
-            String Send_ErrCode = Integer.toString(Errcode);
-            String Send_Result = Integer.toString(result);
-
-            // Stirng Send_Msg;
-
-            System.out.println(sb);
             writer.println(sb);
 
             // Close Socket, Stream
