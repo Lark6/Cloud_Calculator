@@ -11,7 +11,6 @@ public class Server
         nPort = 9999;
         int MAX_CONNECTIONS=5; //Max connection
 
- 
         try 
         {
             //Create Server Socket & Binding
@@ -55,7 +54,8 @@ class ClientHandler implements Runnable //Thread to Socket Connection
 {
     private Socket clientSocket;
 
-    public ClientHandler(Socket clientSocket) {
+    public ClientHandler(Socket clientSocket) 
+    {
         this.clientSocket = clientSocket;
     }
 
@@ -82,7 +82,8 @@ class ClientHandler implements Runnable //Thread to Socket Connection
                     System.out.println(Str[i]);
                 }
                 //Complite
-                switch (Str[1]) {
+                switch (Str[1]) 
+                {
                     case "-":
                         result = Integer.parseInt(Str[0])-Integer.parseInt(Str[2]);
                         break;
@@ -109,15 +110,10 @@ class ClientHandler implements Runnable //Thread to Socket Connection
             {
                 Errcode = 2;
             }
-            //문자열로 전환후 클라이언트로 전송
+            //Change String Arr & Send to Client
             StringBuffer sb = new StringBuffer();
-
-            // For Debug
-            System.out.println(Errcode);
-            System.out.println(result);
-
-
-
+            
+            //
             sb.append(Integer.toString(Errcode));
             sb.append(" ");
             sb.append(Integer.toString(result));

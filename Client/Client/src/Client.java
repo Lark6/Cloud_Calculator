@@ -49,9 +49,10 @@ public class Client
 
                 BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream())); //receive to Server 
                 String serverResponse = fromServer.readLine();
-                String[] Received_Msg = serverResponse.split(" ");
+                String[] Received_Msg = serverResponse.split(" "); // 
 
-                switch (Integer.parseInt(Received_Msg[0])) {
+                switch (Integer.parseInt(Received_Msg[0])) 
+                {
                     case 0:
                         System.out.println(Received_Msg[1]);
                         break;
@@ -64,7 +65,6 @@ public class Client
                     case 3:
                         System.out.println("ErrCode " + Integer.parseInt(Received_Msg[0])+" : Devided by Zero");
                         break;
-
                 }
 
                 if ("CLOSE".equals(message)) //if input 'CLOSE' close Client
