@@ -1,133 +1,133 @@
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class Server 
+public class testServer 
 {
-
-
-    public static void main(String[] args) 
+    public static void main(String[] args) throws Exception 
     {
-        int nPort;
-        nPort = 9999;
-        int MAX_CONNECTIONS=5; //Max connection
-
+        int portNum = 9999;
         try 
         {
-            //Create Server Socket & Binding
-            ServerSocket serverSocket = new ServerSocket(nPort);
-
-            // Constraint Max Connection
-            int connectedClients = 0;
-            
+            ServerSocket serverSocket = new ServerSocket(portNum);
+            System.out.println("Wating Connection");
+            ExecutorService pool = Executors.newFixedThreadPool(20);
             while (true) 
             {
-                // Waiting Connection
                 Socket clientSocket = serverSocket.accept();
-
-                // Check Max connection
-                if (connectedClients < MAX_CONNECTIONS) 
-                {
-                    System.out.println("Client Connected");
-
-                    // Create & Start Thread for Socket Connection
-                    ClientHandler clientHandler = new ClientHandler(clientSocket);
-                    new Thread(clientHandler).start();
-
-                    // increasing Max connection
-                    connectedClients++;
-                } else 
-                {
-                    // if over Max connection, close socket
-                    System.out.println("Over Max connection");
-                    clientSocket.close();
-                }
+                System.out.println("Connected!!");
+                pool.execute(new Client(clientSocket));
             }
-        } 
-        catch (IOException e) 
+        }
+        catch (IOException e)
         {
             e.printStackTrace();
         }
     }
-}
 
-class ClientHandler implements Runnable //Thread to Socket Connection
-{
-    private Socket clientSocket;
-
-    public ClientHandler(Socket clientSocket) 
+    private static class Client implements Runnable
     {
-        this.clientSocket = clientSocket;
-    }
+        private Socket socket;
 
-    @Override
-    public void run()
-    {
-        try {
-            // Create Stream for read date from Client
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-
-            // read formula from Client
-            String clientMessage = reader.readLine();
-            int Errcode=0; //0: No Err 1: Too many Arguments, 2: Need more argument, 3: Divided by Zero
-            int result =0;
-            String[] Str = clientMessage.split(" ");
-
-            System.out.println(Str.length);
-
-            if (Str.length ==3) 
-            {
-                for (int i = 0; i < Str.length; i++) 
-                {
-                    System.out.println(Str[i]);
-                }
-                //Complite
-                switch (Str[1]) 
-                {
-                    case "-":
-                        result = Integer.parseInt(Str[0])-Integer.parseInt(Str[2]);
-                        break;
-                    case "+":
-                        result = Integer.parseInt(Str[0])+Integer.parseInt(Str[2]);
-                        break;
-                    case "*":
-                        result = Integer.parseInt(Str[0])*Integer.parseInt(Str[2]);
-                        break;
-                    case "/":
-                        if (Integer.parseInt(Str[2])!=0) {
-                            result = Integer.parseInt(Str[0])/Integer.parseInt(Str[2]);
-                        }else if (Integer.parseInt(Str[2])==0){
-                            Errcode=3;
-                        }
-                        break;
-                }
-
-
-            }else if(Str.length>3)
-            {
-                Errcode=1;
-            }else if(Str.length<3)
-            {
-                Errcode = 2;
-            }
-            //Change String Arr & Send to Client
-            StringBuffer sb = new StringBuffer();
-            
-            //
-            sb.append(Integer.toString(Errcode));
-            sb.append(" ");
-            sb.append(Integer.toString(result));
-
-            writer.println(sb);
-
-            // Close Socket, Stream
-            reader.close();
-            writer.close();
-            clientSocket.close();
-        } catch (IOException e) 
+        Client(Socket socket)
         {
-            e.printStackTrace();
-            System.err.println(" Protocol Error");
+            this.socket = socket;
+        }
+        
+        @Override
+        public void run()
+        {
+            BufferedReader fromClient = null;
+            DataOutputStream toClient = null;
+            try 
+            {
+                fromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                toClient = new DataOutputStream(socket.getOutputStream());
+
+                while (true) 
+                {
+                    String clientMessage = fromClient.readLine();
+                    if (clientMessage == null) 
+                    {
+                        break;
+                    }
+                    System.out.println(clientMessage);
+
+                    String response = calculate(clientMessage);
+
+                    // Send msg to Client
+                    toClient.writeBytes(response + '\n');
+                }
+            }            
+            catch (IOException e) 
+            {
+                e.printStackTrace();
+            } 
+            finally 
+            {
+                try 
+                {
+                    socket.close();
+                } 
+                catch (IOException e) 
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    private static String calculate(String clientMessage) 
+    {
+        String[] argument = clientMessage.split(" ");
+        int ErrCode=0;
+
+        if (argument.length == 3) 
+        {
+            try 
+            {
+                double num1 = Double.parseDouble(argument[0]);
+                double num2 = Double.parseDouble(argument[2]);
+
+                switch (argument[1]) 
+                {
+                    case "+":
+                        return Integer.toString(ErrCode)+" " + (num1 + num2);
+                    case "-":
+                        return Integer.toString(ErrCode)+" "+ (num1 - num2);
+                    case "*":
+                        return Integer.toString(ErrCode)+" " + (num1 * num2);
+                    case "/":
+                        // 0으로 나누는 경우 처리
+                        if (num2 != 0) 
+                        {
+                            return Integer.toString(ErrCode)+" " + (num1 / num2);
+                        }
+                        else 
+                        {
+                            ErrCode=100;
+                            return Integer.toString(ErrCode) + " No_result";
+                        }
+                    default:
+                        ErrCode=101;
+                        return Integer.toString(ErrCode) + " No_result";
+                }
+            } 
+            catch (NumberFormatException e) 
+            {
+                ErrCode=102;
+                return Integer.toString(ErrCode) + " No_result";
+            }
+        }
+        else if (argument.length>3) 
+        {
+            ErrCode=103;
+            return Integer.toString(ErrCode) + " No_result";
+        }
+        else
+        {
+            ErrCode=104;
+            return Integer.toString(ErrCode) + " No_result";
         }
     }
 }

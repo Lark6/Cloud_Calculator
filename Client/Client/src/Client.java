@@ -1,18 +1,15 @@
 import java.io.*;
 import java.net.*;
 
-public class Client 
-{
-    private static final int DEFAULT_PORT = 9999;
-    private static final String DEFAULT_IP = "localhost";
+public class Client {
+    // Default Info
+    private static String ipAddress = "localhost";
+    private static int port = 9999;
 
-    public static void main(String[] args) 
+    public static void main(String argv[]) throws Exception 
     {
-        int port = DEFAULT_PORT;
-        String ipAddress = DEFAULT_IP;
-
-        // read IP & port number from config.txt
-        try (BufferedReader configFileReader = new BufferedReader(new FileReader("config.txt"))) 
+        // read IP & port number from server_info.dat
+        try (BufferedReader configFileReader = new BufferedReader(new FileReader("src/server_info.dat"))) 
         {
             String configIpAddress = configFileReader.readLine();
             String portStr = configFileReader.readLine();
@@ -28,59 +25,92 @@ public class Client
             }
 
             System.out.println("Server IP : " + ipAddress + ", Server port : " + port);
-        } catch (IOException e) // Using Default
+        }catch (IOException e) // Using Default
         {
             System.err.println("Using Default");
         }
 
-        try {
-            // Connect to Server
-            Socket socket = new Socket(InetAddress.getByName(ipAddress), port);
+        Socket clientSocket = null;
+        BufferedReader userInput = null;
+        DataOutputStream toServer = null;
 
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in)); // ready to input Sting for Calculation
-            PrintWriter toServer = new PrintWriter(socket.getOutputStream(), true); // ready to send Server
-            
-            while (true) //Section for Sending Formula
+        try 
+        {
+            // Socket connection to Server
+            clientSocket = new Socket(ipAddress, port);
+            userInput = new BufferedReader(new InputStreamReader(System.in));
+            toServer = new DataOutputStream(clientSocket.getOutputStream());
+            BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            while (true) 
             {
-                System.out.print("input formula: ");
+                // Input msg 
+                System.out.print("input formula (EX:20 + 10): ");
                 String message = userInput.readLine();
 
-                toServer.println(message); //send to Server
-
-                BufferedReader fromServer = new BufferedReader(new InputStreamReader(socket.getInputStream())); //receive to Server 
-                String serverResponse = fromServer.readLine();
-                String[] Received_Msg = serverResponse.split(" "); // 
-
-                switch (Integer.parseInt(Received_Msg[0])) 
-                {
-                    case 0:
-                        System.out.println(Received_Msg[1]);
-                        break;
-                    case 1:
-                        System.out.println("ErrCode " + Integer.parseInt(Received_Msg[0])+" : Too many Arguments");
-                        break;
-                    case 2:
-                        System.out.println("ErrCode " + Integer.parseInt(Received_Msg[0])+" : Need more argument");
-                        break;
-                    case 3:
-                        System.out.println("ErrCode " + Integer.parseInt(Received_Msg[0])+" : Devided by Zero");
-                        break;
-                }
-
-                if ("CLOSE".equals(message)) //if input 'CLOSE' close Client
+                //if input 'CLOSE' close Client
+                if ("CLOSE".equals(message)) 
                 {
                     break;
                 }
+
+                // Send msg to Server
+                toServer.writeBytes(message + '\n');
+
+                // receive msg from server
+                String serverResponse = inFromServer.readLine();
+
+                // Decoding msg from server
+                decodingMsg(serverResponse);
             }
-
-            //Close Socket Stream 
-            userInput.close();
-            toServer.close();
-            socket.close();
-
         } catch (IOException e) 
         {
-            e.printStackTrace();
+            e.printStackTrace();        
+        }finally 
+        {
+            try 
+            {
+                if (clientSocket != null)
+                {
+                    clientSocket.close();
+                }         
+            } catch (IOException e) 
+            {
+                e.printStackTrace();
+            }
         }
+    }
+
+    private static void decodingMsg(String serverResponse) 
+    {
+        //deconding msg from Server (Errcode, result
+        String[] result = serverResponse.split(" ");
+
+            String errcode = result[0];
+            String Answer = result[1];
+
+            // Print Answer if Errcode = 0 else Print Error case
+            switch (errcode) 
+            {
+                case "0":
+                    System.out.println("result: " + Answer);
+                    break;
+                case "100":
+                    System.out.println("Div by Zero");
+                    break;
+                case "101":
+                    System.out.println("InValid Operator");
+                    break;
+                case "102":
+                    System.out.println("Invalid Num");
+                    break;
+                case "103":
+                    System.out.println("Too many Argument");
+                    break;
+                case "104":
+                    System.out.println("Less Argument");
+                    break;   
+            }
+        
     }
 }
