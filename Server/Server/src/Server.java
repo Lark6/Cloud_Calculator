@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class testServer 
+public class Server 
 {
     public static void main(String[] args) throws Exception 
     {
