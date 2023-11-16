@@ -17,7 +17,7 @@ public class Server
             {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Connected!!");
-                pool.execute(new Client(clientSocket));
+                pool.execute(new Clientconn(clientSocket));
             }
         }
         catch (IOException e)
@@ -26,11 +26,11 @@ public class Server
         }
     }
 
-    private static class Client implements Runnable
+    private static class Clientconn implements Runnable
     {
         private Socket socket;
 
-        Client(Socket socket)
+        Clientconn(Socket socket)
         {
             this.socket = socket;
         }
