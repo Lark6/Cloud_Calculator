@@ -3,7 +3,9 @@
 Network_Homework
 ├─ .DS_Store
 ├─ Client
+│  ├─ .DS_Store
 │  └─ Client
+│     ├─ .DS_Store
 │     ├─ .vscode
 │     │  └─ settings.json
 │     ├─ README.md
@@ -13,13 +15,13 @@ Network_Homework
 │     └─ src
 │        ├─ Client.java
 │        └─ server_info.dat
+├─ README.md
 ├─ Server
 │  └─ Server
 │     ├─ .vscode
 │     │  └─ settings.json
 │     ├─ README.md
 │     ├─ bin
-│     │  ├─ ClientHandler.class
 │     │  └─ Server.class
 │     ├─ lib
 │     └─ src
